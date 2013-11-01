@@ -2,8 +2,7 @@ TEMPLATE = app
 CONFIG += console
 CONFIG -= qt
 
-SOURCES += main.cpp \
-    CGraph.cpp
+SOURCES += main.cpp
 
 HEADERS += \
     CGraph.h \

@@ -1,8 +1,8 @@
 #ifndef CGRAPH_H
 #define CGRAPH_H
 
-#include<list>
-#include<vector>
+#include <list>
+#include <vector>
 #include <limits>
 #include "ASSERT.h"
 
@@ -105,6 +105,18 @@ struct Vertex
         }
     }
 
+    list<unsigned> GetListOfNeighbors()
+    {
+        list<unsigned> luListOfNeighbors;
+        list<Edge>::const_iterator ciEdges = m_listEdges.begin();
+        while(ciEdges != m_listEdges.end())
+        {
+            luListOfNeighbors.push_back(ciEdges->m_uToVertex);
+            ++ciEdges;
+        }
+        return luListOfNeighbors;
+    }
+
 private:
     double m_uValue;
     list<Edge> m_listEdges;
@@ -116,10 +128,25 @@ class CGraph
 {
 public:
     //CGraph(bool bDirected = false);
-    CGraph(const unsigned &uNumOfVertices = 0, const bool &bDirected = false);
-    unsigned GetNumberOfVertices() const; // Returns the number of vertices in the graph.
-    unsigned GetNumberOfEdges() const; // Returns the number of edges in the graph.
-    void AddVertex(const double &uValue = 0);
+    CGraph(const unsigned &uNumOfVertices = 0, const bool &bDirected = false):
+        m_uNumberOfVertices(uNumOfVertices), m_uNumberOfEdges(0),
+        m_bDirected(bDirected)
+    {
+        m_vectorOfVertices.resize(m_uNumberOfVertices);
+    }
+    unsigned GetNumberOfVertices() const // Returns the number of vertices in the graph.
+    {
+        return m_uNumberOfVertices;
+    }
+    unsigned GetNumberOfEdges() const // Returns the number of edges in the graph.
+    {
+        return m_uNumberOfEdges;
+    }
+    void AddVertex(const double &uValue = 0)
+    {
+        m_vectorOfVertices.push_back(uValue);
+        ++m_uNumberOfVertices;
+    }
     double GetVertexValue(const unsigned &uVertex) const
     {
         ASSERT("CGraph::GetVertexValue() parameter \"uVertex\" out of range", uVertex<m_uNumberOfVertices);
@@ -130,11 +157,74 @@ public:
         ASSERT("CGraph::SetVertexValue() parameter \"uVertex\" out of range", uVertex<m_uNumberOfVertices);
         m_vectorOfVertices[uVertex].SetValue(dValue);
     }
-    void AddEdge(const unsigned &uFromVertex, const unsigned &uToVertex, const double &dValue);
-    bool HasEdge(const unsigned &uFromVertex, const unsigned &uToVertex) const;
-    void DeleteEdge(const unsigned &uFromVertex, const unsigned &uToVertex);
-    double GetEdgeValue(const unsigned &uFromVertex, const unsigned &uToVertex) const;
-    void SetEdgeValue(const unsigned &uFromVertex, const unsigned &uToVertex, const double &dValue);
+    void AddEdge(const unsigned &uFromVertex, const unsigned &uToVertex, const double &dValue)
+    {
+        ASSERT("CGraph::AddEdge() parameter \"uFromVertex\" out of range", uFromVertex<m_uNumberOfVertices);
+        ASSERT("CGraph::AddEdge() parameter \"uToVertex\" out of range", uToVertex<m_uNumberOfVertices);
+        if(uFromVertex == uToVertex) return;
+        if(m_bDirected)
+        {
+            if(m_vectorOfVertices[uFromVertex].AddEdgeTo(uToVertex, dValue))
+            {
+                ++m_uNumberOfEdges;
+            }
+        }
+        else
+        {
+            if( (m_vectorOfVertices[uFromVertex].AddEdgeTo(uToVertex, dValue)) &&
+                (m_vectorOfVertices[uToVertex].AddEdgeTo(uFromVertex, dValue)) )
+            {
+                ++m_uNumberOfEdges;
+            }
+        }
+    }
+    bool HasEdge(const unsigned &uFromVertex, const unsigned &uToVertex) const
+    {
+        ASSERT("CGraph::HasEdge() parameter \"uFromVertex\" out of range", uFromVertex<m_uNumberOfVertices);
+        ASSERT("CGraph::HasEdge() parameter \"uToVertex\" out of range", uToVertex<m_uNumberOfVertices);
+        return m_vectorOfVertices[uFromVertex].HasEdgeTo(uToVertex);
+    }
+
+    void DeleteEdge(const unsigned &uFromVertex, const unsigned &uToVertex)
+    {
+        ASSERT("CGraph::DeleteEdge() parameter \"uFromVertex\" out of range", uFromVertex<m_uNumberOfVertices);
+        ASSERT("CGraph::DeleteEdge() parameter \"uToVertex\" out of range", uToVertex<m_uNumberOfVertices);
+        if(m_bDirected)
+        {
+            if(m_vectorOfVertices[uFromVertex].DeleteEdgeTo(uToVertex))
+            {
+                --m_uNumberOfEdges;
+            }
+        }
+        else
+        {
+            if( (m_vectorOfVertices[uFromVertex].DeleteEdgeTo(uToVertex)) &&
+                (m_vectorOfVertices[uToVertex].DeleteEdgeTo(uFromVertex)) )
+            {
+                --m_uNumberOfEdges;
+            }
+        }
+
+    }
+    double GetEdgeValue(const unsigned &uFromVertex, const unsigned &uToVertex) const
+    {
+        ASSERT("CGraph::GetEdgeValue() parameter \"uFromVertex\" out of range", uFromVertex<m_uNumberOfVertices);
+        ASSERT("CGraph::GetEdgeValue() parameter \"uToVertex\" out of range", uToVertex<m_uNumberOfVertices);
+        ASSERT("CGraph::GetEdgeValue() there is no such edge", HasEdge(uFromVertex, uToVertex) == true);
+        return m_vectorOfVertices[uFromVertex].GetValueOfEdgeTo(uToVertex);
+    }
+    void SetEdgeValue(const unsigned &uFromVertex, const unsigned &uToVertex, const double &dValue)
+    {
+        ASSERT("CGraph::SetEdgeValue() parameter \"uFromVertex\" out of range", uFromVertex<m_uNumberOfVertices);
+        ASSERT("CGraph::SetEdgeValue() parameter \"uToVertex\" out of range", uToVertex<m_uNumberOfVertices);
+        ASSERT("CGraph::SetEdgeValue() there is no such edge", HasEdge(uFromVertex, uToVertex) == true);
+        m_vectorOfVertices[uFromVertex].SetValueOfEdgeTo(uToVertex, dValue);
+    }
+    list<unsigned> GetListOfNeighborVertices(const unsigned &uFromVertex)
+    {
+        ASSERT("CGraph::GetListOfNeighborVertices() parameter \"uFromVertex\" out of range", uFromVertex<m_uNumberOfVertices);
+        return m_vectorOfVertices[uFromVertex].GetListOfNeighbors();
+    }
 private:
     unsigned m_uNumberOfVertices;
     unsigned m_uNumberOfEdges;
