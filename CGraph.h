@@ -3,7 +3,9 @@
 
 #include<list>
 #include<vector>
+#include <limits>
 #include "ASSERT.h"
+
 using namespace std;
 
 struct Edge
@@ -17,7 +19,7 @@ struct Edge
 
 struct Vertex
 {
-    Vertex(const double &uValue = 0.0):
+    Vertex(const double &uValue = numeric_limits<double>::max()):
         m_uValue(uValue)
     {
     }

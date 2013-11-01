@@ -32,65 +32,58 @@ public:
     static CGraph RandomlyGenerateGraph(const unsigned &cuNumberOfVertices, const double &cdEdgeDensity, const double &cdDistanceRange)
     {
         ASSERT("CGraphGenerator::RandomlyGenerateGraph() parameter \"cuNumberOfVertices\" out of range", ((cuNumberOfVertices>1) && (cuNumberOfVertices<=1000)) );
-        ASSERT("CGraphGenerator::RandomlyGenerateGraph() parameter \"cdEdgeDensity\" out of range", ((cdEdgeDensity>0) && (cdEdgeDensity<=1)) );
-        ASSERT("CGraphGenerator::RandomlyGenerateGraph() parameter \"cdDistanceRange\" out of range", ((cdDistanceRange>=m_cdMinimumDistanse) && (cdDistanceRange<=100.0)) );
+        ASSERT("CGraphGenerator::RandomlyGenerateGraph() parameter \"cdEdgeDensity\" out of range", ((cdEdgeDensity>0.0) && (cdEdgeDensity<=1.0)) );
+        ASSERT("CGraphGenerator::RandomlyGenerateGraph() parameter \"cdDistanceRange\" out of range", ((cdDistanceRange>=m_cdMinimumDistanse) && (cdDistanceRange<=10.0)) );
 
         CGraph ResultGraph(cuNumberOfVertices);
-        unsigned uNumberOfEdgesToAdd = GetMaximumPossibleNumberOfEdges(cuNumberOfVertices) * cdEdgeDensity;
-//        cout << "Max num of edges: " << GetMaximumPossibleNumberOfEdges(cuNumberOfVertices) << endl;
-//        cout << "Num of edges (according to density): " << uNumberOfEdgesToAdd << endl;
-        for(unsigned uEdgeCount = 0; uEdgeCount<uNumberOfEdgesToAdd; ++uEdgeCount)
-        {!!!
-            do
+        for(unsigned uVertexFrom = 0; uVertexFrom<(cuNumberOfVertices - 1); ++uVertexFrom)
+        {
+            for(unsigned uVertexTo = uVertexFrom + 1; uVertexTo<cuNumberOfVertices; ++uVertexTo)
             {
-                unsigned uVertexFrom = rand()%cuNumberOfVertices;
-                unsigned uVertexTo = rand()%cuNumberOfVertices;
-                if( (uVertexFrom == uVertexTo) || (ResultGraph.HasEdge(uVertexFrom, uVertexTo)) )
-                {
-                    continue;
-                }
-                else
+                if( (rand() % 100) < (cdEdgeDensity * 100) )
                 {
                     double dGeneratedDistance = rand()/static_cast<double>(RAND_MAX)*(cdDistanceRange-m_cdMinimumDistanse) + m_cdMinimumDistanse;
                     ResultGraph.AddEdge(uVertexFrom, uVertexTo, dGeneratedDistance);
-                    break;
                 }
-            } while(1);
+            }
         }
         return ResultGraph;
     }
 private:
-    static unsigned GetMaximumPossibleNumberOfEdges(const unsigned &cuNumberOfVertices)
-    {
-        unsigned uResult = 0;
-        for(unsigned uCount = 0; uCount<cuNumberOfVertices; ++uCount)
-        {
-            uResult += uCount;
-        }
-        return uResult;
-    }
     CGraphGenerator();
     static const double m_cdMinimumDistanse = 1.0;
 };
 
 
-class ShortestPath
+class CMonteCarloSimulation
 {
 public:
     static double CalculateAverageShortestPathLengthInRandomlyGeneratedGraph(const unsigned &cuNumberOfVertices, const double &cdEdgeDensity, const double &cdDistanceRange)
     {
         CGraph GeneratedGraph = CGraphGenerator::RandomlyGenerateGraph(cuNumberOfVertices, cdEdgeDensity, cdDistanceRange);
         PrintGraphAsList(GeneratedGraph);
+        //cout << "Generated edges: " << GeneratedGraph.GetNumberOfEdges() << endl;
+        return AverageShortestPathInGraphFromVertex(GeneratedGraph, 0);
+    }
+private:
+    static double AverageShortestPathInGraphFromVertex(CGraph &Graph, const unsigned &uStartingVertex = 0)
+    {
+        double dResult = 0;
+        Graph.SetVertexValue(uStartingVertex, 0); // Starting vertex has distanse value of 0
+        unsigned uCurrentIndex = uStartingVertex;
+
+
+        return dResult;
     }
 };
 
 int main()
 {
     srand(time(NULL));
-    const unsigned cuNumberOfSimulations = 10;
-    const unsigned cuNumberOfVerticesInGraph = 10;
+    const unsigned cuNumberOfSimulations = 1;
+    const unsigned cuNumberOfVerticesInGraph = 5;
     const double cdEdgesDensityInGraph = 0.4;
-    const double cdDistanceRangeInGraph = 5.0;
+    const double cdDistanceRangeInGraph = 1.0;
 
     cout << "Monte Carlo simulation." << endl
          << "Calculation of an average shortest path in randomly generated graph." << endl
@@ -99,7 +92,7 @@ int main()
          << "Distanse range in graph: 1.0 to " << cdDistanceRangeInGraph << endl;
     for(unsigned uSimulation = 0; uSimulation < cuNumberOfSimulations; ++uSimulation)
     {
-        double dSimulationResult = ShortestPath::CalculateAverageShortestPathLengthInRandomlyGeneratedGraph(cuNumberOfVerticesInGraph, cdEdgesDensityInGraph, cdDistanceRangeInGraph);
+        double dSimulationResult = CMonteCarloSimulation::CalculateAverageShortestPathLengthInRandomlyGeneratedGraph(cuNumberOfVerticesInGraph, cdEdgesDensityInGraph, cdDistanceRangeInGraph);
         cout << "Simulation result #" << uSimulation + 1 << ": " << dSimulationResult << endl;
     }
 
