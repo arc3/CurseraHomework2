@@ -4,7 +4,5 @@ CONFIG -= qt
 
 SOURCES += main.cpp
 
-HEADERS += \
-    CGraph.h \
-    ASSERT.h
+HEADERS +=
 
